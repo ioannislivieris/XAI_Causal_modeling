@@ -39,6 +39,18 @@ class Synthetic:
 
         np.random.seed(seed=self.seed)
 
+    def info(self):
+        print(22*'-')
+        print('- Available datasets - ')
+        print(22*'-')
+        print('1. Linear (linear)')
+        print('2. Nonlinear (sin)')
+        print('3. Normally distributed x, linearly independent (lin_ind_normal)')
+        print('4. Non-normally distributed x, linearly independent (lin_ind_mixed)')
+        print('5. Non-normally distributed x, with dependecies & linear correlations (lin_corr_mixed)')
+        print('6. Non-normally distributed x, with dependecies & linear correlations (corr_interactions))')
+        
+
     def create_dataset(self, train_size=0.8):
         ''' 
         Create a synthetic dataset
@@ -53,6 +65,14 @@ class Synthetic:
             X, t, y, y_potential = self._dataset_linear()
         elif self.type == 'sin':
             X, t, y, y_potential = self._dataset_sin()
+        elif self.type == 'lin_ind_normal':
+            X, t, y, y_potential = self._dataset_lin_ind_normal()
+        elif self.type == 'lin_ind_mixed':
+            X, t, y, y_potential = self._dataset_lin_ind_mixed()
+        elif self.type == 'lin_corr_mixed':
+            X, t, y, y_potential = self._dataset_lin_corr_mixed()
+        elif self.type == 'corr_interactions':
+            X, t, y, y_potential = self._dataset_corr_interactions()    
         else:
             raise Exception('Unknown dataset')
 
@@ -170,4 +190,116 @@ class Synthetic:
         y_potential = np.array([u_1 + np.zeros(self.size)*u_2 + 100*np.sin(np.sum(u_x[:, self.n_i:self.n_f], axis=1)),
                                u_1 + np.ones(self.size)*u_2 + 100*np.sin(np.sum(u_x[:, self.n_i:self.n_f], axis=1))]).T
 
+        return u_x, t, y, y_potential
+
+
+    def _dataset_lin_ind_normal(self):
+        '''
+        Normally distributed x, linearly independent
+        '''
+
+        p = 0.3
+        t = stats.bernoulli.rvs(self.p, size=self.size)
+        u_1 = stats.norm.rvs(size=self.size)
+        u_2 = stats.norm.rvs(size=self.size)
+
+        coefs = np.array([ 0.1, 0.5, 1, 2, -2])
+        u_x = stats.multivariate_normal.rvs(np.zeros((10)), np.eye(10),
+                                            size=self.size)
+        
+        y = u_1 + t * u_2 + np.dot(coefs, u_x[:, 5:].T)
+        
+        y_potential =  np.array([u_1 + np.zeros(self.size)*u_2 + np.dot(coefs, u_x[:, 5:].T),
+                                 u_1 + np.ones(self.size)*u_2 + np.dot(coefs, u_x[:, 5:].T)]).T
+        
+        return u_x, t, y, y_potential
+
+    def _dataset_lin_ind_mixed(self):
+        '''
+        Non-normally distributed x, linearly independent
+        '''
+
+    
+        t = stats.bernoulli.rvs(self.p, size=self.size)
+        u_1 = stats.norm.rvs(size=self.size)
+        u_2 = stats.norm.rvs(size=self.size)
+
+        coefs = np.array([ 0.1, 0.5, 1, 2, -2])
+        x1 = stats.uniform.rvs(size=self.size)[:, np.newaxis]
+        x2 = stats.powerlaw.rvs(a=0.7, size=self.size)[:, np.newaxis]
+        x3 = stats.rayleigh.rvs(size=self.size)[:, np.newaxis]
+        x4 = stats.uniform.rvs(size=self.size)[:, np.newaxis]
+        x5 = stats.uniform.rvs(size=self.size)[:, np.newaxis]
+        x6 = stats.uniform.rvs(size=self.size)[:, np.newaxis]
+        x7 = stats.powerlaw.rvs(a=0.7, size=self.size)[:, np.newaxis]
+        x8 = stats.rayleigh.rvs(size=self.size)[:, np.newaxis]
+        x9 = stats.uniform.rvs(size=self.size)[:, np.newaxis]
+        x10 = stats.uniform.rvs(size=self.size)[:, np.newaxis]
+
+        u_x = np.concatenate((x1, x2, x3, x4, x5, x6, x7, x8, x9, x10), axis=1)
+        y = u_1 + t * u_2 + np.dot(coefs, u_x[:, 5:].T)
+
+        y_potential =  np.array([u_1 + np.zeros(self.size)*u_2 + np.dot(coefs, u_x[:, 5:].T),
+                                 u_1 + np.ones(self.size)*u_2 + np.dot(coefs, u_x[:, 5:].T)]).T
+        
+        return u_x, t, y, y_potential
+
+
+    def _dataset_lin_corr_mixed(self):
+        '''
+        Non-normally distributed x, with dependecies & linear correlations
+        '''
+        t = stats.bernoulli.rvs(self.p, size=self.size)
+        u_1 = stats.norm.rvs(size=self.size)
+        u_2 = stats.norm.rvs(size=self.size)
+
+        coefs = np.array([ 0.1, 0.5, 1, 2, -2])
+        x1 = stats.uniform.rvs(size=self.size)[:, np.newaxis]
+        x2 = stats.powerlaw.rvs(a=0.7, size=self.size)[:, np.newaxis]
+        x3 = x1 + 0.5*x2 + 0.05*stats.uniform.rvs(size=self.size)[:, np.newaxis]
+        x4 = stats.uniform.rvs(size=self.size)[:, np.newaxis]
+        x5 = 2*x4 + 0.5*stats.uniform.rvs(size=self.size)[:, np.newaxis]
+        x6 = stats.uniform.rvs(size=self.size)[:, np.newaxis]
+        x7 = stats.powerlaw.rvs(a=0.7, size=self.size)[:, np.newaxis]
+        x8 = x6 + 0.5*x7 + 0.05*stats.uniform.rvs(size=self.size)[:, np.newaxis]
+        x9 = stats.uniform.rvs(size=self.size)[:, np.newaxis]
+        x10 = 2*x9 + 0.5 * stats.uniform.rvs(size=self.size)[:, np.newaxis]
+
+        u_x = np.concatenate((x1, x2, x3, x4, x5, x6, x7, x8, x9, x10), axis=1)
+        y = u_1 + t * u_2 + np.dot(coefs, u_x[:, self.n_i:self.n_f].T)
+
+        y_potential =  np.array([u_1 + np.zeros(self.size)*u_2 + np.dot(coefs, u_x[:, self.n_i:self.n_f].T),
+                                 u_1 + np.ones(self.size)*u_2 + np.dot(coefs, u_x[:, self.n_i:self.n_f].T)]).T
+                
+        return u_x, t, y, y_potential
+
+    def _dataset_corr_interactions(self):
+        '''
+        Non-normally distributed x, with dependecies & linear correlations
+        '''
+
+        t = stats.bernoulli.rvs(self.p, size=self.size)
+        u_1 = stats.norm.rvs(size=self.size)
+        u_2 = stats.norm.rvs(size=self.size)
+
+        coefs = np.array([ 0.1, 0.5, 1, 2, -2])
+        x1 = stats.uniform.rvs(size=self.size)[:, np.newaxis]
+        x2 = stats.powerlaw.rvs(a=0.7, size=self.size)[:, np.newaxis]
+        x3 = x1 + 0.5*x2 + 0.05*stats.uniform.rvs(size=self.size)[:, np.newaxis]
+        x4 = stats.uniform.rvs(size=self.size)[:, np.newaxis]
+        x5 = 2*x4 + 0.5*stats.uniform.rvs(size=self.size)[:, np.newaxis]
+        x6 = stats.uniform.rvs(size=self.size)[:, np.newaxis]
+        x7 = stats.powerlaw.rvs(a=0.7, size=self.size)[:, np.newaxis]
+        x8 = x6 + 0.5*x7 + 0.05*stats.uniform.rvs(size=self.size)[:, np.newaxis]
+        x9 = stats.uniform.rvs(size=self.size)[:, np.newaxis]
+        x10 = 2*x9 + 0.5 * stats.uniform.rvs(size=self.size)[:, np.newaxis]
+
+        u_x = np.concatenate((x1, x1**2, x2*x3, (x4**2)*x5, x6*x7, x8**2, x9*x8,
+                            x10, x10**3, x10*x6), axis=1) 
+        y = u_1 + t * u_2 + np.dot(coefs, u_x[:, 5:].T)
+        
+        
+        y_potential =  np.array([u_1 + np.zeros(self.size)*u_2 + np.dot(coefs, u_x[:, 5:].T),
+                                 u_1 + np.ones(self.size)*u_2 + np.dot(coefs, u_x[:, 5:].T)]).T
+                
         return u_x, t, y, y_potential

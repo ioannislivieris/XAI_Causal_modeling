@@ -1,7 +1,13 @@
+import os
+import random
 import numpy as np
 from scipy import stats
 from sklearn.model_selection import train_test_split
 
+seed = 42
+random.seed(seed)
+os.environ["PYTHONHASHSEED"] = str(seed)
+np.random.seed(seed)
 
 class Synthetic:
     ''' 
@@ -16,9 +22,9 @@ class Synthetic:
         size: int
             number of instances
         n_f: int
-            ???
-        n_i: int
             number of features
+        n_i: int
+            number of irrelevant features
         p: float
             probability 
     '''
@@ -112,7 +118,7 @@ class Synthetic:
             target vector
         y_potential: np.array
             factual and counterfactual target vector
-        '''
+        '''        
         t = stats.bernoulli.rvs(self.p, size=self.size)
         u_1 = 20*stats.norm.rvs(size=self.size) + 50
         u_2 = 10*stats.norm.rvs(size=self.size) + 20

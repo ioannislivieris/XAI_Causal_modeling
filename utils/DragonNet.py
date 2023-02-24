@@ -49,8 +49,8 @@ def make_dragonnet(input_dim, reg_l2):
     """
     seed=42
 
-# tf.random.set_seed(seed) # for Tensoflow >= 2.0
-    tf.random.set_random_seed(seed)
+    tf.random.set_seed(seed)
+    # tf.random.set_random_seed(seed) # for Tensoflow v1
 
     t_l1 = 0.
     t_l2 = reg_l2
